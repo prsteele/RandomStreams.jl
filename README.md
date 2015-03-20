@@ -1,3 +1,8 @@
+# `RandomStreams`
+
+This repository contains the `RandomStreams` package for the Julia
+language.
+
 # Introduction
 
 We offer an implementation of the MRG32k3a random number generator

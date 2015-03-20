@@ -1,0 +1,3 @@
+module RandomStreams
+
+end
