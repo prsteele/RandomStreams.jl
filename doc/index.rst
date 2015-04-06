@@ -6,4 +6,4 @@
    :maxdepth: 2
 
    RandomStreams
-   mrs32k3a
+   mrg32k3a
