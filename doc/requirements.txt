@@ -1,1 +1,2 @@
--e git+https://github.com/JuliaLang/JuliaDoc.git@15e0f6f97ecd08f93504b639956047968e3e6a42#egg=JuliaDoc
+-e git+https://github.com/JuliaLang/JuliaDoc.git#egg=JuliaDoc
+Sphinx
