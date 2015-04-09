@@ -1,9 +1,9 @@
 module RandomStreams
 
-export srand, rand, BadMRG32k3a
+export srand, rand, MRG32k3a, MRG32k3aGen, random_U01, next_stream
 
 abstract AbstractRNGStream
 
-include("bad_mrg.jl")
+include("mrg32k3a.jl")
 
 end # module
