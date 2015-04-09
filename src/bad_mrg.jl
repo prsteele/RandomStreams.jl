@@ -1,3 +1,4 @@
+
 type BadMRG32k3a <: AbstractRNG # also AbstractRNGStream
     x::Int64
 
