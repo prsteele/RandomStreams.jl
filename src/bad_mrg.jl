@@ -13,19 +13,21 @@ end
 #
 # AbstractRNGStream implementation
 #
-function next_rng(self::BadMRG32k3a, ::BadMRG32k3a)
+#function next_rng(self::BadMRG32k3a, ::BadMRG32k3a)
+# You cannot specify function output type
+function next_rng(self::BadMRG32k3a)
     BadMRG32k3a(self.x + 1)
 end
 
-function reseed_stream(self::BadMRG32k3a, seed::Int64, ::BadMRG32k3a)
-    BadMrg32k3a(seed)
+function reseed_stream(self::BadMRG32k3a, seed::Int64)
+    BadMRG32k3a(seed)
 end
 
 #
 # AbstractRNG implementation
 #
 
-function srand(self::BadMRG32k3a, seed::Int64, ::BadMRG32k3a)
+function srand(self::BadMRG32k3a, seed::Int64)
     BadMRG32k3a(seed)
 end
 
