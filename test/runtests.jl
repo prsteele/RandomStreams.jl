@@ -9,3 +9,5 @@ rng2 = next_stream(generator)
 
 # @test random_U01(rng1) == 4
 # @test random_U01(rng2) == 13
+
+include("mrg32k3a_test.jl")

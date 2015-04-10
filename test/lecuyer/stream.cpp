@@ -55,7 +55,7 @@ auto main(int argc, char* argv[]) -> int
     sum += z;
   }
 
-  std::cout << std::setprecision(16);
+  std::cout << std::setprecision(17);
   std::cout << sum << std::endl;
   for (auto &z : first_and_last) {
     std::cout << z << std::endl;
