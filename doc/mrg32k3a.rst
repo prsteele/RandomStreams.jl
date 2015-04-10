@@ -5,5 +5,5 @@
 **********
 
 The ``MRG32k3a`` generator is a combined multiple recursive generator
-defined by Pierre L'Ecuyere with a very long period and a large number
+defined by Pierre L'Ecuyer with a very long period and a large number
 of streams.
