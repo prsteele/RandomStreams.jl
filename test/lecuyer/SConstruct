@@ -1,0 +1,8 @@
+env = Environment()
+
+env.Append(CCFLAGS=['-std=c++11'])
+env.Append(CCFLAGS=['-O3'])
+env.Append(CCFLAGS=['-Wall'])
+env.Append(CCFLAGS=['-Werror'])
+
+stream = env.Program("stream", ['RngStream.cpp', 'stream.cpp'])
