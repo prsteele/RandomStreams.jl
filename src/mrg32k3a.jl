@@ -5,6 +5,7 @@ const a12 = float64(1403580)
 const a13 = float64(-810728)
 const a21 = float64(527612)
 const a23 = float64(-1370589)
+const norm = 1.0 / (1 + m1)
 
 
 const A1p0 =  [  0.0   1.0   0.0 ;
@@ -52,13 +53,29 @@ type MRG32k3a <: AbstractRNG
         @assert(all(x[4:6] .> 0))
         @assert(all(x[4:6] .< m2))
 
-        new(x,x,x)
+        new(copy(x),copy(x),copy(x))
     end
 end    
 
-# dummy function
+# produces a random number with 32 bits of precision
+
 function random_U01(rng::MRG32k3a)
-    return rng.Cg[1]
+    
+    p1::Int64 = (a12 * rng.Cg[2] + a13 * rng.Cg[1]) % m1
+    p1 += p1 > 0 ? 0 : m1 
+
+    rng.Cg[1] = rng.Cg[2]
+    rng.Cg[2] = rng.Cg[3]
+    rng.Cg[3] = p1
+
+    p2::Int64 = (a21 * rng.Cg[6] + a23 * rng.Cg[4]) % m2
+    p2 += p2 > 0 ? 0 : m2
+
+    rng.Cg[4] = rng.Cg[5]
+    rng.Cg[5] = rng.Cg[6]
+    rng.Cg[6] = p2
+
+    u::Float64 = p1 > p2 ? (p1 - p2) * norm : (p1 + m1 - p2) * norm
 end  
 
 ############################################################
