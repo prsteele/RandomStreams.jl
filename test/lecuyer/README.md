@@ -1,4 +1,4 @@
-* Test case generation
+# Test case generation
 
 We compare our implementation to the C++ implementation by Pierre
 L'Ecuyer. His code, `RngStream.cpp` and `RngStream.h`, is included
