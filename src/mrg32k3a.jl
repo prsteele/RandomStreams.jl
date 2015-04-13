@@ -44,6 +44,7 @@ const InvA2 =  [          0.0   360363334.0  4225571728.0 ;
 function checkseed(x::Vector{Int})
     return length(x) == 6     &&
            all(x[1:6] .>= 0)  &&
+           all(x[1:3] .< m1)  &&
            all(x[4:6] .< m2)  &&
           ~all(x[1:3] == 0)   &&
           ~all(x[4:6] == 0)
