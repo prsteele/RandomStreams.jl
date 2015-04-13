@@ -35,7 +35,11 @@ lasts = Array[[
                0.17481334748705299,
                0.90130638318875056
                ]]
-                
+
+#
+# Primary tests -- these test that the actual implementation conforms
+# to the standard implementation.
+#                
 for i = 1:length(seeds)
     gen = MRG32k3a(seeds[i])
 
@@ -44,7 +48,7 @@ for i = 1:length(seeds)
 
     _sum = 0
     for j = 1:10^7
-        z = random_U01(gen)
+        z = rand(gen)
         _sum += z
 
         if j <= 10
@@ -58,3 +62,13 @@ for i = 1:length(seeds)
     @test all(first .== firsts[i]);
     @test all(last .== lasts[i]);
 end
+
+#
+# Test that the various overloads of `rand` return the proper type.
+#
+
+rng = MRG32k3a([12345, 12345, 12345, 12345, 12345, 12345])
+@test typeof(rand(rng)) == Float64
+@test typeof(rand(rng, Float64)) == Float64
+@test typeof(rand(rng, Float32)) == Float32
+@test typeof(rand(rng, Float16)) == Float16
