@@ -41,59 +41,101 @@ const InvA2 =  [          0.0   360363334.0  4225571728.0 ;
                           0.0           1.0           0.0 ]
        
 
+function checkseed(x::Vector{Int})
+    return length(x) == 6     &&
+           all(x[1:6] .>= 0)  &&
+           all(x[4:6] .< m2)  &&
+          ~all(x[1:3] == 0)   &&
+          ~all(x[4:6] == 0)
+end
+
 type MRG32k3a <: AbstractRNG
     Cg::Vector{Int64}  # the current state of the RNG
     Bg::Vector{Int64}  # the start point of the current substream
     Ig::Vector{Int64}  # the start point of the current stream
     
-    function MRG32k3a(x::Vector{Int64})
-        @assert(length(x) == 6)
-        @assert(all(x[1:3] .> 0))
-        @assert(all(x[1:3] .< m1))
-        @assert(all(x[4:6] .> 0))
-        @assert(all(x[4:6] .< m2))
-
+    function MRG32k3a(x::Vector{Int})
+        @assert(checkseed(x))
         new(copy(x),copy(x),copy(x))
     end
 end    
+
+
+string(rng::MRG32k3a) =  string("Full state of RNG Stream:\n",
+                                "Cg = ",rng.Cg,"\n",
+                                "Bg = ",rng.Bg,"\n",
+                                "Ig = ",rng.Ig,"\n")
+
+get_state(rng::MRG32k3a) = rng.Cg
 
 # produces a random number with 32 bits of precision
 
 function random_U01(rng::MRG32k3a)
     
     p1::Int64 = (a12 * rng.Cg[2] + a13 * rng.Cg[1]) % m1
-    p1 += p1 > 0 ? 0 : m1 
+    p1 += p1 < 0 ? m1 : 0 
 
     rng.Cg[1] = rng.Cg[2]
     rng.Cg[2] = rng.Cg[3]
     rng.Cg[3] = p1
 
     p2::Int64 = (a21 * rng.Cg[6] + a23 * rng.Cg[4]) % m2
-    p2 += p2 > 0 ? 0 : m2
+    p2 += p2 < 0 ? m2 : 0
 
     rng.Cg[4] = rng.Cg[5]
     rng.Cg[5] = rng.Cg[6]
     rng.Cg[6] = p2
 
     u::Float64 = p1 > p2 ? (p1 - p2) * norm : (p1 + m1 - p2) * norm
-end  
+end
 
+function srand(rng::MRG32k3a,x::Vector{Int})
+    @assert(checkseed(x))
+    for i = 1:6
+        rng.Cg[i] = rng.Bg[i] = rng.Ig[i] = x[i]     
+    end
+    return true
+end
+
+function reset_stream(rng::MRG32k3a)
+    for i = 1:6
+        rng.Cg[i] = rng.Bg[i] = rng.Ig[i]
+    end
+    return true
+end
+
+function reset_substream(rng::MRG32k3a)
+    for i = 1:6
+        rng.Cg[i] = rng.Bg[i]
+    end
+    return true
+end
+
+ 
 ############################################################
       
 type MRG32k3aGen <: AbstractRNGStream
     nextSeed::Vector{Int64}
 
-    function MRG32k3aGen(x::Vector{Int64})
-        @assert(length(x) == 6)
-        @assert(all(x[1:3] .> 0))
-        @assert(all(x[1:3] .< m1))
-        @assert(all(x[4:6] .> 0))
-        @assert(all(x[4:6] .< m2))
-
+    function MRG32k3aGen(x::Vector{Int})
+        @assert(checkseed(x))
         new(x)
     end
 
 end
+
+string(rng_gen::MRG32k3aGen) = string("Seed for next MRG32k3a generator:\n",rng_gen.nextSeed)
+
+get_state(rng_gen::MRG32k3aGen) = rng_gen.nextSeed
+
+function srand(rng_gen::MRG323kaGen,seed::Vector{Int})
+    @assert(checkseed(x))
+    for i = 1:6
+        rng_gen.nextSeed[i] = x[i]
+    end
+    return true
+end
+
 
 function next_stream(rng_gen::MRG32k3aGen)
     rng = MRG32k3a(copy(rng_gen.nextSeed))
