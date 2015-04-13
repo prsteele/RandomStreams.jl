@@ -175,7 +175,7 @@ function MultModM (a::Float64, s::Float64, c::Float64, m::Float64)
     end
 end
 
-#Computes V = A*s % m, assumes that abs(s[i]) < m
+#Computes v = A*s % m, assumes that abs(s[i]) < m
 function MatVecModM(A::Array{Float64,2},s::Array{Float64,1}, v::Array{Float64,1}, m::Float64)
     @assert(size(A)==(3,3))
     @assert(size(s)==3)
@@ -241,4 +241,29 @@ function MatPowModM(A::Array{Float64,2}, B::Array{Float64,2}, m::Float64, n::Flo
     end
 end
 
+function AdvanceState(e::Float64, c::Float64)
+    if c >= 0
+        C1 = A1p0^e % m1
+        C2 = A2p0^e % m2
+    else
+        C1 = InvA1^-e % m1
+        C2 = InvA2^-e % m2
+    end
+
+    if e > 0
+        B1 = A1p0^(2^e) % m1
+        B2 = A2p0^(2^e) % m2
+    elseif e < 0
+        B1 = InvA1^(2^-e) % m1
+        B2 = InvA2^(2^-e) % m2
+    else
+        C1 = B1*C1 % m1
+        C2 = B2*C2 % m2
+    end
+
+    Cg = C1*Cg % m
+    &Cg[3] = C2*&Cg[3] % m2
+#^ Ask pat what & does
+
+end
 
