@@ -1,10 +1,10 @@
 
-const m1 = float64(2^32 - 209)
-const m2 = float64(2^32 - 22853)
-const a12 = float64(1403580)
-const a13 = float64(-810728)
-const a21 = float64(527612)
-const a23 = float64(-1370589)
+const m1 = Float64(2^32 - 209)
+const m2 = Float64(2^32 - 22853)
+const a12 = Float64(1403580)
+const a13 = Float64(-810728)
+const a21 = Float64(527612)
+const a23 = Float64(-1370589)
 const norm = 1.0 / (1 + m1)
 
 
@@ -59,7 +59,7 @@ end
 
 # produces a random number with 32 bits of precision
 
-function random_U01(rng::MRG32k3a)
+function rand(rng::MRG32k3a)
     
     p1::Int64 = (a12 * rng.Cg[2] + a13 * rng.Cg[1]) % m1
     p1 += p1 > 0 ? 0 : m1 
