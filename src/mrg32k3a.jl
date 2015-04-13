@@ -6,7 +6,9 @@ const a13 = Float64(-810728)
 const a21 = Float64(527612)
 const a23 = Float64(-1370589)
 const norm = 1.0 / (1 + m1)
-
+const two17 = Float64(131072)
+const two53 = Float64(9007199254740992)
+#const fact = Float64(1/2^24)
 
 const A1p0 =  [  0.0   1.0   0.0 ;
                  0.0   0.0   1.0 ;
@@ -152,3 +154,91 @@ function next_stream(rng_gen::MRG32k3aGen)
     
     return rng
 end
+
+#Return (a*s + c) % m, all must be < 2^35
+function MultModM (a::Float64, s::Float64, c::Float64, m::Float64)
+    v = a * s + c
+    if (v >= two53 || v <= two53)
+        a1 = a / two17
+        a -= a1 * two17
+        v = a1 * s
+        a1 = v / m
+        v -= a1 * ,
+        v = v * two17 + a * s + c
+    end
+    a1 = v / m
+    #in case v < 0
+    if ((v -== a1 * m) < 0.0) 
+        return v += m
+    else 
+        return v
+    end
+end
+
+#Computes V = A*s % m, assumes that abs(s[i]) < m
+function MatVecModM(A::Array{Float64,2},s::Array{Float64,1}, v::Array{Float64,1}, m::Float64)
+    @assert(size(A)==(3,3))
+    @assert(size(s)==3)
+    @assert(size(v)==3)
+
+    x = [0, 0, 0]
+
+    for i = 1:3
+        x[i] = MultModM(A[i][1], s[1], 0.0, m)
+        x[i] = MultModM(A[i][2], s[2], x[i], m)
+        x[i] = MultModM(A[i][3], s[3], x[i], m)
+        v[i] = x[i]
+    end 
+end
+
+#Computes matrix C = A*B % m, assumes that abs(s[i]) < m
+function MatMatModM(A::Array{Float64,2}, B::Array{Float64,2}, C::Array{Float64,2}, m::Float64)
+    @assert(size(A)==(3,3))
+    @assert(size(B)==(3,3))
+    @assert(size(C)==(3,3))
+
+    V = [0, 0, 0]
+    W = zeros(3,3)
+
+    for i = 1:3
+        for j = 1:3
+            V[j] = B[j][i]
+        end
+        MatVecModM(A,V,V,m)
+        for j = 1:3
+            W[j][i] = V[j]
+        end
+    end
+    for i = 1:3
+        for j = 1:3
+            C[i][j] = W[i][j]
+        end
+    end
+end
+
+#Computes the matrix B = A^(2^e) % m
+function MatTwoPowModM(A::Array{Float64,2}, B::Array{Float64,2}, m::Float64, e::Float64)
+    @assert(size(A)==(3,3))
+    @assert(size(B)==(3,3))
+
+    B = A
+    for i = 1:e
+        MatMatModM(B, B, B, m)
+    end
+end
+
+#Computes the matrix B = (A^n % m)
+function MatPowModM(A::Array{Float64,2}, B::Array{Float64,2}, m::Float64, n::Float64)
+    W = A
+    B = eye(3)
+
+    while n > 0
+        if (n%2==1) 
+            MatMatModM(W, B, B, m)
+        end
+        MatMatModM(W, W, W, m)
+        n /= 2
+    end
+end
+
+
