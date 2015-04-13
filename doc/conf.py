@@ -1,6 +1,6 @@
 import juliadoc
 
-extensions = ['juliadoc.julia', 'juliadoc.jlhelp']
+extensions = ['juliadoc.julia', 'juliadoc.jlhelp', 'sphinx.ext.mathjax']
 html_theme_path = [juliadoc.get_theme_dir()]
 html_sidebars = juliadoc.default_sidebars()
 
