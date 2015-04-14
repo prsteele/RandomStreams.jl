@@ -261,9 +261,8 @@ function AdvanceState(e::Float64, c::Float64)
         C2 = B2*C2 % m2
     end
 
-    Cg = C1*Cg % m
-    &Cg[3] = C2*&Cg[3] % m2
-#^ Ask pat what & does
+    Cg[1:3] = C1*Cg[1:3] % m1
+    Cg[4:6] = C2*Cg[4:6] % m2
 
 end
 
