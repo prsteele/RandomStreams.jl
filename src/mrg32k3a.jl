@@ -1,4 +1,5 @@
 
+
 const m1 = Float64(2^32 - 209)
 const m2 = Float64(2^32 - 22853)
 const a12 = Float64(1403580)
@@ -131,7 +132,7 @@ string(rng_gen::MRG32k3aGen) = string("Seed for next MRG32k3a generator:\n",rng_
 
 get_state(rng_gen::MRG32k3aGen) = rng_gen.nextSeed
 
-function srand(rng_gen::MRG323kaGen,seed::Vector{Int})
+function srand(rng_gen::MRG32k3aGen,seed::Vector{Int})
     @assert(checkseed(x))
     for i = 1:6
         rng_gen.nextSeed[i] = x[i]
@@ -163,12 +164,12 @@ function MultModM (a::Float64, s::Float64, c::Float64, m::Float64)
         a -= a1 * two17
         v = a1 * s
         a1 = v / m
-        v -= a1 * ,
+        v -= a1
         v = v * two17 + a * s + c
     end
     a1 = v / m
     #in case v < 0
-    if ((v -== a1 * m) < 0.0) 
+    if ((v -= a1 * m) < 0.0) 
         return v += m
     else 
         return v
