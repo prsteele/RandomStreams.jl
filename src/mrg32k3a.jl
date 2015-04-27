@@ -1,6 +1,5 @@
 const m1 = Float64(2^32 - 209)
 const m2 = Float64(2^32 - 22853)
->>>>>>> 1030645151314bae0d33d3cc33bf1a81cf453ded
 const a12 = Float64(1403580)
 const a13 = Float64(-810728)
 const a21 = Float64(527612)
