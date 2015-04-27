@@ -1,6 +1,6 @@
 module RandomStreams
 
-export srand, rand, MRG32k3a, MRG32k3aGen, next_stream
+export srand, rand, MRG32k3a, MRG32k3aGen, next_stream, AdvanceState 
 
 abstract AbstractRNGStream
 

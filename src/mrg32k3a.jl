@@ -1,6 +1,6 @@
 
-const m1 = Float64(2^32 - 209)
-const m2 = Float64(2^32 - 22853)
+const m1 = Float64(4294967087)
+const m2 = Float64(4294944443)
 const a12 = Float64(1403580)
 const a13 = Float64(-810728)
 const a21 = Float64(527612)
@@ -131,7 +131,7 @@ string(rng_gen::MRG32k3aGen) = string("Seed for next MRG32k3a generator:\n",rng_
 
 get_state(rng_gen::MRG32k3aGen) = rng_gen.nextSeed
 
-function srand(rng_gen::MRG323kaGen,seed::Vector{Int})
+function srand(rng_gen::MRG32k3aGen,seed::Vector{Int})
     @assert(checkseed(x))
     for i = 1:6
         rng_gen.nextSeed[i] = x[i]
@@ -159,16 +159,16 @@ end
 function MultModM (a::Float64, s::Float64, c::Float64, m::Float64)
     v = a * s + c
     if (v >= two53 || v <= two53)
-        a1 = a / two17
+        a1 = a % two17
         a -= a1 * two17
         v = a1 * s
-        a1 = v / m
-        v -= a1 * ,
+        a1 = v % m
+        v -= a1 * m
         v = v * two17 + a * s + c
     end
-    a1 = v / m
-    #in case v < 0
-    if ((v -== a1 * m) < 0.0) 
+    a1 = v % m
+    # in case v < 0
+    if ((v -= a1 * m) < 0.0) 
         return v += m
     else 
         return v
@@ -241,28 +241,33 @@ function MatPowModM(A::Array{Float64,2}, B::Array{Float64,2}, m::Float64, n::Flo
     end
 end
 
-function AdvanceState(e::Float64, c::Float64)
+# Advances n steps forward if n > 0, backwards otherwise
+# if e > 0, n = 2^e + c
+# if e < 0, n = -2^(-e) + c
+# if e = 0, n = c
+function AdvanceState(rng::MRG32k3a, e::Int64, c::Int64)
     if c >= 0
-        C1 = A1p0^e % m1
-        C2 = A2p0^e % m2
+        MatPowModM(A1p0, C1, m1, c)
+        MatPowModM(A2p0, C2, m2, c)
     else
-        C1 = InvA1^-e % m1
-        C2 = InvA2^-e % m2
+        MatPowModM(InvA1, C1, m1, -c)
+        MatPowModM(InvA2, C2, m2, -c)
     end
 
     if e > 0
-        B1 = A1p0^(2^e) % m1
-        B2 = A2p0^(2^e) % m2
+        MatTwoPowModM(A1p0, B1, m1, e)
+        MatTwoPowModM(A2po, B2, m2, e)
     elseif e < 0
-        B1 = InvA1^(2^-e) % m1
-        B2 = InvA2^(2^-e) % m2
+        MatTwoPowModM(InvA1, B1, m1, -e)
+        MatTwoPowModM(InvA2, B2, m2, -e)
     else
-        C1 = B1*C1 % m1
-        C2 = B2*C2 % m2
+        MatMatModM(B1, C1, C1, m1)
+        MatMatModM(B2, C2, C2, m2)
     end
 
-    Cg[1:3] = C1*Cg[1:3] % m1
-    Cg[4:6] = C2*Cg[4:6] % m2
+    MatVecModM(C1, rng.Cg[1:3], rng.Cg[1:3], m1)
+    MatVecModM(C2, rng.Cg[4:6], rng.Cg[4:6], m2)
 
 end
+
 
