@@ -38,7 +38,7 @@ lasts = Array[[
 
 #
 # Primary tests -- these test that the actual implementation conforms
-# to the standard implementation.
+# to the standard implementation. Now with state Cg test
 #                
 for i = 1:length(seeds)
     gen = MRG32k3a(seeds[i])
@@ -62,7 +62,7 @@ for i = 1:length(seeds)
     @test all(first .== firsts[i]);
     @test all(last .== lasts[i]);
 end
-
+   
 #
 # Test that the various overloads of `rand` return the proper type.
 #
@@ -72,3 +72,11 @@ rng = MRG32k3a([12345, 12345, 12345, 12345, 12345, 12345])
 @test typeof(rand(rng, Float64)) == Float64
 @test typeof(rand(rng, Float32)) == Float32
 @test typeof(rand(rng, Float16)) == Float16
+
+#
+# Test AdvanceState against original implementation
+#
+
+rng = MRG32k3a([1,2,3,4,5,6])
+AdvanceState(rng, 23, 1611392) 
+@test rng.Cg == [2437590332, 1899628456, 3114422128, 2899718867, 1085495888, 737655219] 
