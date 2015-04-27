@@ -1,9 +1,3 @@
-
-<<<<<<< HEAD
-const m1 = Float64(4294967087)
-const m2 = Float64(4294944443)
-=======
-
 const m1 = Float64(2^32 - 209)
 const m2 = Float64(2^32 - 22853)
 >>>>>>> 1030645151314bae0d33d3cc33bf1a81cf453ded
@@ -168,21 +162,12 @@ function MultModM (a::Float64, s::Float64, c::Float64, m::Float64)
         a1 = a % two17
         a -= a1 * two17
         v = a1 * s
-<<<<<<< HEAD
         a1 = v % m
         v -= a1 * m
         v = v * two17 + a * s + c
     end
     a1 = v % m
     # in case v < 0
-=======
-        a1 = v / m
-        v -= a1
-        v = v * two17 + a * s + c
-    end
-    a1 = v / m
-    #in case v < 0
->>>>>>> 1030645151314bae0d33d3cc33bf1a81cf453ded
     if ((v -= a1 * m) < 0.0) 
         return v += m
     else 
