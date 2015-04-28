@@ -245,6 +245,11 @@ end
 # if e < 0, n = -2^(-e) + c
 # if e = 0, n = c
 function AdvanceState(rng::MRG32k3a, e::Int64, c::Int64)
+    C1 = [0 0 0; 0 0 0; 0 0 0]
+    C2 = [0 0 0; 0 0 0; 0 0 0]
+    B1 = C1
+    B2 = C2
+    
     if c >= 0
         MatPowModM(A1p0, C1, m1, c)
         MatPowModM(A2p0, C2, m2, c)
