@@ -1,47 +1,51 @@
-const m1 = Float64(2^32 - 209)
-const m2 = Float64(2^32 - 22853)
-const a12 = Float64(1403580)
-const a13 = Float64(-810728)
-const a21 = Float64(527612)
-const a23 = Float64(-1370589)
-const norm = 1.0 / (1 + m1)
-const two17 = Float64(131072)
-const two53 = Float64(9007199254740992)
+import Base.show
+
+const m1 = Int64(2^32 - 209)
+const m2 = Int64(2^32 - 22853)
+const a12 = Int64(1403580)
+const a13 = Int64(-810728)
+const a21 = Int64(527612)
+const a23 = Int64(-1370589)
+const norm = Float64(1.0 / (1 + m1))
+const two17 = Int64(131072)
+const two53 = Int64(9007199254740992)
 #const fact = Float64(1/2^24)
 
-const A1p0 =  [  0.0   1.0   0.0 ;
-                 0.0   0.0   1.0 ;
-                 a13   a12   0.0 ]
+const A1p0 =  [  0     1     0   ;
+                 0     0     1   ;
+                 a13   a12   0   ]
 
-const A2p0 =  [  0.0   1.0   0.0 ;
-                 0.0   0.0   1.0 ;
-                 a23   0.0   a21 ]
+const A2p0 =  [  0     1     0   ;
+                 0     0     1   ;
+                 a23   0     a21 ]
 
-const A1p76 =  [   82758667.0  1871391091.0  4127413238.0 ;
-                 3672831523.0    69195019.0  1871391091.0 ;
-                 3672091415.0  3528743235.0    69195019.0 ]
+const A1p76 =  [   82758667  1871391091  4127413238 ;
+                 3672831523    69195019  1871391091 ;
+                 3672091415  3528743235    69195019 ]
 
-const A2p76 =  [ 1511326704.0  3759209742.0  1610795712.0 ;
-                 4292754251.0  1511326704.0  3889917532.0 ;
-                 3859662829.0  4292754251.0  3708466080.0 ]
+const A2p76 =  [ 1511326704  3759209742  1610795712 ;
+                 4292754251  1511326704  3889917532 ;
+                 3859662829  4292754251  3708466080 ]
 
-const A1p127 = [ 2427906178.0  3580155704.0   949770784.0 ;
-                  226153695.0  1230515664.0  3580155704.0 ;
-                 1988835001.0   986791581.0  1230515664.0 ]
+const A1p127 = [ 2427906178  3580155704   949770784 ;
+                  226153695  1230515664  3580155704 ;
+                 1988835001   986791581  1230515664 ]
 
-const A2p127 = [ 1464411153.0   277697599.0  1610723613.0 ;
-                   32183930.0  1464411153.0  1022607788.0 ; 
-                 2824425944.0    32183930.0  2093834863.0 ]
+const A2p127 = [ 1464411153   277697599  1610723613 ;
+                   32183930  1464411153  1022607788 ; 
+                 2824425944    32183930  2093834863 ]
       
-const InvA1  = [  184888585.0           0.0  1945170933.0 ;
-                          1.0           0.0           0.0 ;
-                          0.0           1.0           0.0 ]
+const InvA1  = [  184888585           0  1945170933 ;
+                          1           0           0 ;
+                          0           1           0 ]
 
-const InvA2 =  [          0.0   360363334.0  4225571728.0 ;
-                          1.0           0.0           0.0 ;
-                          0.0           1.0           0.0 ]
+const InvA2 =  [          0   360363334  4225571728 ;
+                          1           0           0 ;
+                          0           1           0 ]
        
-
+"""
+Ensures a given seed is valid for MRG32k3a random number generator.
+"""
 function checkseed(x::Vector{Int})
     return length(x) == 6     &&
            all(x[1:6] .>= 0)  &&
@@ -62,16 +66,9 @@ type MRG32k3a <: AbstractRNG
     end
 end    
 
-
-string(rng::MRG32k3a) =  string("Full state of RNG Stream:\n",
-                                "Cg = ",rng.Cg,"\n",
-                                "Bg = ",rng.Bg,"\n",
-                                "Ig = ",rng.Ig,"\n")
-
-get_state(rng::MRG32k3a) = rng.Cg
-
-# produces a random number with 32 bits of precision
-
+"""
+Produces a raw random number with 32 bits of precision.
+"""
 function rand(rng::MRG32k3a)
     
     p1::Int64 = (a12 * rng.Cg[2] + a13 * rng.Cg[1]) % m1
@@ -91,31 +88,52 @@ function rand(rng::MRG32k3a)
     u::Float64 = p1 > p2 ? (p1 - p2) * norm : (p1 + m1 - p2) * norm
 end
 
-function srand(rng::MRG32k3a,x::Vector{Int})
+"""
+Seeds a given random number generator with seed x.
+"""
+function srand(rng::MRG32k3a,x::Vector{Int64})
     @assert(checkseed(x))
     for i = 1:6
         rng.Cg[i] = rng.Bg[i] = rng.Ig[i] = x[i]     
     end
-    return true
 end
 
-function reset_stream(rng::MRG32k3a)
+"""
+Resets a given random number generator to the beginning of the current stream.
+"""
+function reset_stream!(rng::MRG32k3a)
     for i = 1:6
         rng.Cg[i] = rng.Bg[i] = rng.Ig[i]
     end
-    return true
 end
 
-function reset_substream(rng::MRG32k3a)
+"""
+Resets a given random number generator to the beginning of the current substream.
+"""
+function reset_substream!(rng::MRG32k3a)
     for i = 1:6
         rng.Cg[i] = rng.Bg[i]
     end
-    return true
 end
 
+"""
+Takes a random number generator and shifts seed to next substream.
+"""
+function next_substream!(rng::MRG32k3a)
+    rng.Bg[1:3] = MatVecModM(A1p76,rng.Bg[1:3],m1)
+    rng.Bg[4:6] = MatVecModM(A2p76,rng.Bg[4:6],m2)
+    for i = 1:6
+        rng.Cg[i] = rng.Bg[i]
+    end
+end
+        
+    
  
 ############################################################
-      
+
+"""
+An object that generates independent random number streams.
+"""      
 type MRG32k3aGen <: AbstractRNGStream
     nextSeed::Vector{Int64}
 
@@ -126,152 +144,147 @@ type MRG32k3aGen <: AbstractRNGStream
 
 end
 
-string(rng_gen::MRG32k3aGen) = string("Seed for next MRG32k3a generator:\n",rng_gen.nextSeed)
+function Base.show(io::IO,rng_gen::MRG32k3aGen)
+    print(io,"Seed for next MRG32k3a generator:\n$(rng_gen.nextSeed)")
+end
 
-get_state(rng_gen::MRG32k3aGen) = rng_gen.nextSeed
+function Base.show(io::IO,rng::MRG32k3a)
+    print(io,"Full state of MRG32k3a generator:\nCg = $(rng.Cg)\nBg = $(rng.Bg)\nIg = $(rng.Ig)")
+end
 
-function srand(rng_gen::MRG32k3aGen,seed::Vector{Int})
+get_state(rng_gen::MRG32k3aGen) = copy(rng_gen.nextSeed)
+get_state(rng::MRG32k3a) = copy(rng.Cg)
+
+"""
+Reseeds the RNG generator object.
+"""
+function srand(rng_gen::MRG32k3aGen,seed::Vector{Int64})
     @assert(checkseed(x))
     for i = 1:6
         rng_gen.nextSeed[i] = x[i]
     end
-    return true
 end
 
-
+"""
+Given an RNG generator object, returns the next RNG stream.
+"""
 function next_stream(rng_gen::MRG32k3aGen)
     rng = MRG32k3a(copy(rng_gen.nextSeed))
     
-    rng_gen.nextSeed *= 3
-    rng_gen.nextSeed += 1
-    rng_gen.nextSeed[1:3] %= m1
-    rng_gen.nextSeed[4:6] %= m2
-    
-    # need to adjust for numerical accuracy
-    # rng_gen.nextSeed[1:3] = (A1p127 * rng_gen.nextSeed[1:3]) % m1
-    # rng_gen.nextSeed[4:6] = (A2p127 * rng_gen.nextSeed[4:6]) % m2
+    rng_gen.nextSeed[1:3] = MatVecModM(A1p127,rng_gen.nextSeed[1:3],m1)
+    rng_gen.nextSeed[4:6] = MatVecModM(A2p127,rng_gen.nextSeed[4:6],m2)
     
     return rng
 end
 
-#Return (a*s + c) % m, all must be < 2^35
-function MultModM (a::Float64, s::Float64, c::Float64, m::Float64)
-    v = a * s + c
-    if (v >= two53 || v <= two53)
-        a1 = a % two17
+"""
+Computes (a*s + c) % m, all must be < 2^35. Overflow-safe.
+"""
+function MultModM (a::Int64, s::Int64, c::Int64, m::Int64)
+    val = a * Float64(s) + c
+    if abs(val) < two53
+        v = Int64(val)
+    else
+        a1 = a ÷ two17
         a -= a1 * two17
-        v = a1 * s
-        a1 = v % m
-        v -= a1 * m
-        v = v * two17 + a * s + c
+        v  = (a1 * s) % m
+        v  = v * two17 + a * s + c
     end
-    a1 = v % m
-    # in case v < 0
-    if ((v -= a1 * m) < 0.0) 
-        return v += m
-    else 
-        return v
-    end
+    v %= m
+    v += (v < 0) ? m : 0
+    return v
 end
 
-#Computes v = A*s % m, assumes that abs(s[i]) < m
-function MatVecModM(A::Array{Float64,2},s::Array{Float64,1}, v::Array{Float64,1}, m::Float64)
-    @assert(size(A)==(3,3))
-    @assert(size(s)==3)
-    @assert(size(v)==3)
+"""
+Computes A*s % m, assuming abs(s[i]) < m. Overflow-safe.
+"""
+function MatVecModM(A::Array{Int64,2},s::Array{Int64,1}, m::Int64)
 
-    x = [0, 0, 0]
-
-    for i = 1:3
-        x[i] = MultModM(A[i][1], s[1], 0.0, m)
-        x[i] = MultModM(A[i][2], s[2], x[i], m)
-        x[i] = MultModM(A[i][3], s[3], x[i], m)
-        v[i] = x[i]
-    end 
-end
-
-#Computes matrix C = A*B % m, assumes that abs(s[i]) < m
-function MatMatModM(A::Array{Float64,2}, B::Array{Float64,2}, C::Array{Float64,2}, m::Float64)
-    @assert(size(A)==(3,3))
-    @assert(size(B)==(3,3))
-    @assert(size(C)==(3,3))
-
-    V = [0, 0, 0]
-    W = zeros(3,3)
-
+    v = [0,0,0]
     for i = 1:3
         for j = 1:3
-            V[j] = B[j][i]
-        end
-        MatVecModM(A,V,V,m)
-        for j = 1:3
-            W[j][i] = V[j]
+            v[i] = MultModM(A[i,j], s[j], v[i], m)
         end
     end
-    for i = 1:3
-        for j = 1:3
-            C[i][j] = W[i][j]
-        end
-    end
+
+    return v
 end
 
-#Computes the matrix B = A^(2^e) % m
-function MatTwoPowModM(A::Array{Float64,2}, B::Array{Float64,2}, m::Float64, e::Float64)
-    @assert(size(A)==(3,3))
-    @assert(size(B)==(3,3))
+"""
+Computes matrix A*B % m, assuming abs(s[i]) < m. Overflow-safe.
+"""
+function MatMatModM(A::Array{Int64,2}, B::Array{Int64,2}, m::Int64)
+
+    C = diagm([0,0,0])
+    for i = 1:3
+        C[:,i] = MatVecModM(A,B[:,i],m)
+    end
+
+    return C
+end
+
+"""
+Computes the matrix A^(2^e) % m. Overflow-safe.
+"""
+function MatTwoPowModM(A::Array{Int64,2}, e::Int64, m::Int64)
 
     B = A
     for i = 1:e
-        MatMatModM(B, B, B, m)
+        B = MatMatModM(B, B, m)
     end
+    
+    return B    
 end
 
-#Computes the matrix B = (A^n % m)
-function MatPowModM(A::Array{Float64,2}, B::Array{Float64,2}, m::Float64, n::Float64)
+"""
+Computes the matrix  (A^n % m). Overflow-safe.
+"""
+function MatPowModM(A::Array{Int64,2}, n::Int64, m::Int64)
     W = A
-    B = eye(3)
+    B = diagm([1,1,1])
 
     while n > 0
-        if (n%2==1) 
-            MatMatModM(W, B, B, m)
+        if ( n % 2 == 1 ) 
+            B = MatMatModM(W, B, m)
         end
-        MatMatModM(W, W, W, m)
-        n /= 2
+        W = MatMatModM(W, W, m)
+        n ÷= 2
     end
+    return B
 end
 
-# Advances n steps forward if n > 0, backwards otherwise
-# if e > 0, n = 2^e + c
-# if e < 0, n = -2^(-e) + c
-# if e = 0, n = c
-function AdvanceState(rng::MRG32k3a, e::Int64, c::Int64)
-    C1 = [0 0 0; 0 0 0; 0 0 0]
-    C2 = [0 0 0; 0 0 0; 0 0 0]
-    B1 = C1
-    B2 = C2
-    
+"""
+Given a random number generator, jumps n steps forward if n > 0
+(or -n steps backwards if n < 0), where
+
+if e > 0, let n = 2^e + c;
+if e < 0, let n = -2^(-e) + c;
+if e = 0, let n = c.
+"""
+function advance_state!(rng::MRG32k3a, e::Int64, c::Int64)
     if c >= 0
-        MatPowModM(A1p0, C1, m1, c)
-        MatPowModM(A2p0, C2, m2, c)
+        C1 = MatPowModM(A1p0,c,m1)
+        C2 = MatPowModM(A2p0,c,m2)
     else
-        MatPowModM(InvA1, C1, m1, -c)
-        MatPowModM(InvA2, C2, m2, -c)
+        C1 = MatPowModM(InvA1,-c,m1)
+        C2 = MatPowModM(InvA2,-c,m2)
     end
 
     if e > 0
-        MatTwoPowModM(A1p0, B1, m1, e)
-        MatTwoPowModM(A2po, B2, m2, e)
+        B1 = MatTwoPowModM(A1p0,e,m1)
+        B2 = MatTwoPowModM(A2p0,e,m2)
     elseif e < 0
-        MatTwoPowModM(InvA1, B1, m1, -e)
-        MatTwoPowModM(InvA2, B2, m2, -e)
-    else
-        MatMatModM(B1, C1, C1, m1)
-        MatMatModM(B2, C2, C2, m2)
+        B1 = MatTwoPowModM(InvA1,-e,m1)
+        B2 = MatTwoPowModM(InvA2,-e,m2)
+    end
+    
+    if ~(e == 0)
+        C1 = MatMatModM(B1,C1,m1)
+        C2 = MatMatModM(B2,C2,m1)
     end
 
-    MatVecModM(C1, rng.Cg[1:3], rng.Cg[1:3], m1)
-    MatVecModM(C2, rng.Cg[4:6], rng.Cg[4:6], m2)
-
+    rng.Cg[1:3] = MatVecModM(C1,rng.Cg[1:3],m1) 
+    rng.Cg[4:6] = MatVecModM(C2,rng.Cg[4:6],m2) 
 end
 
 
