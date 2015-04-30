@@ -1,21 +1,23 @@
+import Base.show
+
 const m1 = Int64(2^32 - 209)
 const m2 = Int64(2^32 - 22853)
 const a12 = Int64(1403580)
 const a13 = Int64(-810728)
 const a21 = Int64(527612)
 const a23 = Int64(-1370589)
-const norm = 1.0 / (1 + m1)
+const norm = Float64(1.0 / (1 + m1))
 const two17 = Int64(131072)
 const two53 = Int64(9007199254740992)
 #const fact = Float64(1/2^24)
 
-const A1p0 =  [  0     1     0 ;
-                 0     0     1 ;
-                 a13   a12   0 ]
+const A1p0 =  [  0     1     0   ;
+                 0     0     1   ;
+                 a13   a12   0   ]
 
-const A2p0 =  [  0     1   0   ;
-                 0     0   1   ;
-                 a23   0   a21 ]
+const A2p0 =  [  0     1     0   ;
+                 0     0     1   ;
+                 a23   0     a21 ]
 
 const A1p76 =  [   82758667  1871391091  4127413238 ;
                  3672831523    69195019  1871391091 ;
@@ -41,7 +43,9 @@ const InvA2 =  [          0   360363334  4225571728 ;
                           1           0           0 ;
                           0           1           0 ]
        
-
+"""
+Ensures a given seed is valid for MRG32k3a random number generator.
+"""
 function checkseed(x::Vector{Int})
     return length(x) == 6     &&
            all(x[1:6] .>= 0)  &&
@@ -62,16 +66,9 @@ type MRG32k3a <: AbstractRNG
     end
 end    
 
-
-string(rng::MRG32k3a) =  string("Full state of RNG Stream:\n",
-                                "Cg = ",rng.Cg,"\n",
-                                "Bg = ",rng.Bg,"\n",
-                                "Ig = ",rng.Ig,"\n")
-
-get_state(rng::MRG32k3a) = rng.Cg
-
-# produces a random number with 32 bits of precision
-
+"""
+Produces a raw random number with 32 bits of precision.
+"""
 function rand(rng::MRG32k3a)
     
     p1::Int64 = (a12 * rng.Cg[2] + a13 * rng.Cg[1]) % m1
@@ -91,28 +88,40 @@ function rand(rng::MRG32k3a)
     u::Float64 = p1 > p2 ? (p1 - p2) * norm : (p1 + m1 - p2) * norm
 end
 
-function srand(rng::MRG32k3a,x::Vector{Int})
+"""
+Seeds a given random number generator with seed x.
+"""
+function srand(rng::MRG32k3a,x::Vector{Int64})
     @assert(checkseed(x))
     for i = 1:6
         rng.Cg[i] = rng.Bg[i] = rng.Ig[i] = x[i]     
     end
 end
 
-function reset_stream(rng::MRG32k3a)
+"""
+Resets a given random number generator to the beginning of the current stream.
+"""
+function reset_stream!(rng::MRG32k3a)
     for i = 1:6
         rng.Cg[i] = rng.Bg[i] = rng.Ig[i]
     end
 end
 
-function reset_substream(rng::MRG32k3a)
+"""
+Resets a given random number generator to the beginning of the current substream.
+"""
+function reset_substream!(rng::MRG32k3a)
     for i = 1:6
         rng.Cg[i] = rng.Bg[i]
     end
 end
 
-function next_substream(rng::MRG32k3a)
+"""
+Takes a random number generator and shifts seed to next substream.
+"""
+function next_substream!(rng::MRG32k3a)
     rng.Bg[1:3] = MatVecModM(A1p76,rng.Bg[1:3],m1)
-    rng.Bg[4:6] = MatVecModM(A1p76,rng.Bg[4:6],m2)
+    rng.Bg[4:6] = MatVecModM(A2p76,rng.Bg[4:6],m2)
     for i = 1:6
         rng.Cg[i] = rng.Bg[i]
     end
@@ -121,7 +130,10 @@ end
     
  
 ############################################################
-      
+
+"""
+An object that generates independent random number streams.
+"""      
 type MRG32k3aGen <: AbstractRNGStream
     nextSeed::Vector{Int64}
 
@@ -132,19 +144,30 @@ type MRG32k3aGen <: AbstractRNGStream
 
 end
 
-string(rng_gen::MRG32k3aGen) = string("Seed for next MRG32k3a generator:\n",rng_gen.nextSeed)
+function Base.show(io::IO,rng_gen::MRG32k3aGen)
+    print(io,"Seed for next MRG32k3a generator:\n$(rng_gen.nextSeed)")
+end
 
-get_state(rng_gen::MRG32k3aGen) = rng_gen.nextSeed
+function Base.show(io::IO,rng::MRG32k3a)
+    print(io,"Full state of MRG32k3a generator:\nCg = $(rng.Cg)\nBg = $(rng.Bg)\nIg = $(rng.Ig)")
+end
 
-function srand(rng_gen::MRG32k3aGen,seed::Vector{Int})
+get_state(rng_gen::MRG32k3aGen) = copy(rng_gen.nextSeed)
+get_state(rng::MRG32k3a) = copy(rng.Cg)
+
+"""
+Reseeds the RNG generator object.
+"""
+function srand(rng_gen::MRG32k3aGen,seed::Vector{Int64})
     @assert(checkseed(x))
     for i = 1:6
         rng_gen.nextSeed[i] = x[i]
     end
-    return true
 end
 
-
+"""
+Given an RNG generator object, returns the next RNG stream.
+"""
 function next_stream(rng_gen::MRG32k3aGen)
     rng = MRG32k3a(copy(rng_gen.nextSeed))
     
@@ -154,30 +177,30 @@ function next_stream(rng_gen::MRG32k3aGen)
     return rng
 end
 
-#Return (a*s + c) % m, all must be < 2^35
+"""
+Computes (a*s + c) % m, all must be < 2^35. Overflow-safe.
+"""
 function MultModM (a::Int64, s::Int64, c::Int64, m::Int64)
-    if abs(a * Float64(s) + c) < two53
-        v = a*s + c
+    val = a * Float64(s) + c
+    if abs(val) < two53
+        v = Int64(val)
     else
         a1 = a ÷ two17
         a -= a1 * two17
-        v  = a1 * s
-        v %= m
+        v  = (a1 * s) % m
         v  = v * two17 + a * s + c
     end
     v %= m
-    # in case v < 0
     v += (v < 0) ? m : 0
     return v
 end
 
-#Computes A*s % m, assumes that abs(s[i]) < m
+"""
+Computes A*s % m, assuming abs(s[i]) < m. Overflow-safe.
+"""
 function MatVecModM(A::Array{Int64,2},s::Array{Int64,1}, m::Int64)
-    @assert(size(A)==(3,3))
-    @assert(size(s)==(3,))
 
-    v = [0, 0, 0]
-
+    v = [0,0,0]
     for i = 1:3
         for j = 1:3
             v[i] = MultModM(A[i,j], s[j], v[i], m)
@@ -187,13 +210,12 @@ function MatVecModM(A::Array{Int64,2},s::Array{Int64,1}, m::Int64)
     return v
 end
 
-#Computes matrix A*B % m, assumes that abs(s[i]) < m
+"""
+Computes matrix A*B % m, assuming abs(s[i]) < m. Overflow-safe.
+"""
 function MatMatModM(A::Array{Int64,2}, B::Array{Int64,2}, m::Int64)
-    @assert(size(A)==(3,3))
-    @assert(size(B)==(3,3))
 
     C = diagm([0,0,0])
-
     for i = 1:3
         C[:,i] = MatVecModM(A,B[:,i],m)
     end
@@ -201,9 +223,10 @@ function MatMatModM(A::Array{Int64,2}, B::Array{Int64,2}, m::Int64)
     return C
 end
 
-#Computes the matrix A^(2^e) % m
+"""
+Computes the matrix A^(2^e) % m. Overflow-safe.
+"""
 function MatTwoPowModM(A::Array{Int64,2}, e::Int64, m::Int64)
-    @assert(size(A)==(3,3))
 
     B = A
     for i = 1:e
@@ -213,7 +236,9 @@ function MatTwoPowModM(A::Array{Int64,2}, e::Int64, m::Int64)
     return B    
 end
 
-#Computes the matrix  (A^n % m)
+"""
+Computes the matrix  (A^n % m). Overflow-safe.
+"""
 function MatPowModM(A::Array{Int64,2}, n::Int64, m::Int64)
     W = A
     B = diagm([1,1,1])
@@ -228,7 +253,16 @@ function MatPowModM(A::Array{Int64,2}, n::Int64, m::Int64)
     return B
 end
 
-function AdvanceState!(rng::MRG32k3a, e::Int64, c::Int64)
+
+"""
+Given a random number generator, jumps n steps forward if n > 0
+(or -n steps backwards if n < 0), where
+
+if e > 0, let n = 2^e + c;
+if e < 0, let n = -2^(-e) + c;
+if e = 0, let n = c.
+"""
+function advance_state!(rng::MRG32k3a, e::Int64, c::Int64)
     if c >= 0
         C1 = MatPowModM(A1p0,c,m1)
         C2 = MatPowModM(A2p0,c,m2)
