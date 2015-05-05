@@ -11,12 +11,12 @@ auto main(int argc, char* argv[]) -> int
   if (argc != 7) {
     std::cout << "usage: " << argv[0]
               << " SEED1 SEED2 SEED3 SEED4 SEED5 SEED6 "
-              << std::cout
-              << std::cout
+              << std::endl
+              << std::endl
               << "  Computes the sum of the first 10^7 numbers in the given "
-              << std::cout
+              << std::endl
               << "sequence, along with the first and last ten such numbers."
-              << std::cout;
+              << std::endl;
     return 1;
   }
 
@@ -60,4 +60,7 @@ auto main(int argc, char* argv[]) -> int
   for (auto &z : first_and_last) {
     std::cout << z << std::endl;
   }
+  g.WriteState();
 }
+
+
