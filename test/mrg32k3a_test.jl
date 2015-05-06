@@ -66,7 +66,7 @@ end
 #
 # Test that the various overloads of `rand` return the proper type.
 #
-
+all
 rng = MRG32k3a([12345, 12345, 12345, 12345, 12345, 12345])
 @test typeof(rand(rng)) == Float64
 @test typeof(rand(rng, Float64)) == Float64
@@ -78,5 +78,43 @@ rng = MRG32k3a([12345, 12345, 12345, 12345, 12345, 12345])
 #
 
 rng = MRG32k3a([1,2,3,4,5,6])
+rng_gen = MRG32k3aGen([1,2,3,4,5,6])
 AdvanceState(rng, 23, 1611392) 
-@test rng.Cg == [2437590332, 1899628456, 3114422128, 2899718867, 1085495888, 737655219] 
+@test rng.Cg == [2437590332, 1899628456, 3114422128, 2899718867, 1085495888, 737655219]
+
+#
+# Test srand
+#
+ones = [1,1,1,1,1,1]
+srand(rng, ones)
+srand(rng_gen, ones)
+@test rng.Cg == rng.Ig == rng.Bg == ones 
+@test rng_gen.nextSeed == ones 
+
+#
+# Test checkseed
+#
+@test checkseed([1, 1, 1, 1, 1]) == False
+@test checkseed([1, 1, 2^32, 1, 1, 1]) == False
+@test checkseed([1, 1, 1, 2^32, 1, 1]) == False
+@test checkseed([0, 0, 0, 1, 1, 1]) == False
+@test checkseed([1, 1, 1, 0, 0, 0]) == False
+
+#
+# Test reset_stream!
+#
+reset_stream!(rng)
+@test rng.Cg == rng.Bg == rng.Ig
+
+#
+# Test reset_substream!
+#
+advance_state!(rng, 12, 15);
+@test rng.Cg != Bg
+reset_substream(rng);
+@test rng.Cg == Bg
+@test rng.Cg != Ig
+
+
+
+
