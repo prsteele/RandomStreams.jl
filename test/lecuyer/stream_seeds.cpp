@@ -13,9 +13,9 @@ auto main(int argc, char* argv[]) -> int
               << " SEED1 SEED2 SEED3 SEED4 SEED5 SEED6 "
               << std::endl
               << std::endl
-              << "  Computes the seeds for the next three streams "
+              << "Computes the seeds for the next three streams and "
               << std::endl
-              << "and the seeds of its following three substreams."
+              << "next three substreams, from the original given seed."
               << std::endl;
     return 1;
   }

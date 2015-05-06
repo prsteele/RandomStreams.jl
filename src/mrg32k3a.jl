@@ -51,8 +51,8 @@ function checkseed(x::Vector{Int})
            all(x[1:6] .>= 0)  &&
            all(x[1:3] .< m1)  &&
            all(x[4:6] .< m2)  &&
-          ~all(x[1:3] == 0)   &&
-          ~all(x[4:6] == 0)
+          ~all(x[1:3] .== 0)   &&
+          ~all(x[4:6] .== 0)
 end
 
 type MRG32k3a <: AbstractRNG
@@ -91,10 +91,10 @@ end
 """
 Seeds a given random number generator with seed x.
 """
-function srand(rng::MRG32k3a,x::Vector{Int64})
-    @assert(checkseed(x))
+function srand(rng::MRG32k3a,seed::Vector{Int64})
+    @assert(checkseed(seed))
     for i = 1:6
-        rng.Cg[i] = rng.Bg[i] = rng.Ig[i] = x[i]     
+        rng.Cg[i] = rng.Bg[i] = rng.Ig[i] = seed[i]     
     end
 end
 
@@ -139,7 +139,7 @@ type MRG32k3aGen <: AbstractRNGStream
 
     function MRG32k3aGen(x::Vector{Int})
         @assert(checkseed(x))
-        new(x)
+        new(copy(x))
     end
 
 end
@@ -159,9 +159,9 @@ get_state(rng::MRG32k3a) = copy(rng.Cg)
 Reseeds the RNG generator object.
 """
 function srand(rng_gen::MRG32k3aGen,seed::Vector{Int64})
-    @assert(checkseed(x))
+    @assert(checkseed(seed))
     for i = 1:6
-        rng_gen.nextSeed[i] = x[i]
+        rng_gen.nextSeed[i] = seed[i]
     end
 end
 
@@ -280,7 +280,7 @@ function advance_state!(rng::MRG32k3a, e::Int64, c::Int64)
     
     if ~(e == 0)
         C1 = MatMatModM(B1,C1,m1)
-        C2 = MatMatModM(B2,C2,m1)
+        C2 = MatMatModM(B2,C2,m2)
     end
 
     rng.Cg[1:3] = MatVecModM(C1,rng.Cg[1:3],m1) 
