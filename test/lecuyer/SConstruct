@@ -6,3 +6,4 @@ env.Append(CCFLAGS=['-Wall'])
 env.Append(CCFLAGS=['-Werror'])
 
 stream = env.Program("stream", ['RngStream.cpp', 'stream.cpp'])
+stream_seeds = env.Program("stream_seeds", ['RngStream.cpp', 'stream_seeds.cpp'])
