@@ -55,7 +55,7 @@ function checkseed(x::Vector{Int})
           ~all(x[4:6] .== 0)
 end
 
-type MRG32k3a <: AbstractRNG
+type MRG32k3a <: Base.Random.AbstractRNG
     Cg::Vector{Int64}  # the current state of the RNG
     Bg::Vector{Int64}  # the start point of the current substream
     Ig::Vector{Int64}  # the start point of the current stream
@@ -126,7 +126,14 @@ function next_substream!(rng::MRG32k3a)
         rng.Cg[i] = rng.Bg[i]
     end
 end
-        
+
+# Required to extend randn(), randexp()
+#
+# Julia developers have not exported Close1Open2 or CloseOpen in Base.Random
+#
+# rand(rng::MRG32k3a, ::Type{Base.Random.Close1Open2}) = rand(rng, Base.RandomCloseOpen) + 1.0
+# @inline rand(rng::MRG32k3a, ::Type{Base.Random.Close1Open2}) = rand(rng::MRG32k3a,::Float64)
+    
     
  
 ############################################################
