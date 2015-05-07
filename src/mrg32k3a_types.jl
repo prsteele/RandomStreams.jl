@@ -28,5 +28,5 @@ end
 Generates a `Int64` in the given range from a `MRG32k3a` instance.
 """
 function rand(rng::MRG32k3a, r::UnitRange{Int64})
-    x.start + convert(Int64, (x.stop - x.start) * rand(rng, Float64))
+    r.start + convert(Int64, (r.stop - r.start) * rand(rng, Float64))
 end

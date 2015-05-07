@@ -1,4 +1,7 @@
-import Base.show
+#
+# Implementation of MRG32k3a RNG Streams
+#
+########################################
 
 const m1 = Int64(2^32 - 209)
 const m2 = Int64(2^32 - 22853)
@@ -55,7 +58,7 @@ function checkseed(x::Vector{Int})
           ~all(x[4:6] .== 0)
 end
 
-type MRG32k3a <: AbstractRNG
+type MRG32k3a <: Base.Random.AbstractRNG
     Cg::Vector{Int64}  # the current state of the RNG
     Bg::Vector{Int64}  # the start point of the current substream
     Ig::Vector{Int64}  # the start point of the current stream
@@ -126,7 +129,13 @@ function next_substream!(rng::MRG32k3a)
         rng.Cg[i] = rng.Bg[i]
     end
 end
-        
+
+# Required to extend randn(), randexp(), and other built-in random functions
+
+rand(rng::MRG32k3a, ::Type{Base.Random.Close1Open2}) = rand(rng, Base.Random.CloseOpen) + 1.0
+rand(rng::MRG32k3a, ::Type{Base.Random.CloseOpen}) = rand(rng::MRG32k3a,
+Float64)
+    
     
  
 ############################################################
@@ -144,11 +153,11 @@ type MRG32k3aGen <: AbstractRNGStream
 
 end
 
-function Base.show(io::IO,rng_gen::MRG32k3aGen)
+function show(io::IO,rng_gen::MRG32k3aGen)
     print(io,"Seed for next MRG32k3a generator:\n$(rng_gen.nextSeed)")
 end
 
-function Base.show(io::IO,rng::MRG32k3a)
+function show(io::IO,rng::MRG32k3a)
     print(io,"Full state of MRG32k3a generator:\nCg = $(rng.Cg)\nBg = $(rng.Bg)\nIg = $(rng.Ig)")
 end
 
