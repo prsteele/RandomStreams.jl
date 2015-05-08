@@ -130,13 +130,12 @@ function next_substream!(rng::MRG32k3a)
     end
 end
 
+
 # Required to extend randn(), randexp(), and other built-in random functions
 
 rand(rng::MRG32k3a, ::Type{Base.Random.Close1Open2}) = rand(rng, Base.Random.CloseOpen) + 1.0
 rand(rng::MRG32k3a, ::Type{Base.Random.CloseOpen}) = rand(rng::MRG32k3a,
-Float64)
-    
-    
+Float64)        
  
 ############################################################
 
@@ -295,5 +294,3 @@ function advance_state!(rng::MRG32k3a, e::Int64, c::Int64)
     rng.Cg[1:3] = MatVecModM(C1,rng.Cg[1:3],m1) 
     rng.Cg[4:6] = MatVecModM(C2,rng.Cg[4:6],m2) 
 end
-
-
