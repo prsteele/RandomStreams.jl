@@ -188,7 +188,7 @@ end
 """
 Computes (a*s + c) % m, all must be < 2^35. Overflow-safe.
 """
-function MultModM (a::Int64, s::Int64, c::Int64, m::Int64)
+function MultModM(a::Int64, s::Int64, c::Int64, m::Int64)
     val = a * Float64(s) + c
     if abs(val) < two53
         v = Int64(val)
