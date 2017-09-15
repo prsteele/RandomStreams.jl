@@ -86,8 +86,8 @@ for i = 1:length(seeds)
     rng_gen = MRG32k3aGen(seeds[i])
     gen = next_stream(rng_gen)
 
-    first = Array(Float64, 0)
-    last = Array(Float64, 0)
+    first = Array{Float64}(0)
+    last = Array{Float64}(0)
 
     _sum = 0
     for j = 1:10^7
